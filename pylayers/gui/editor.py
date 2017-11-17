@@ -15,14 +15,15 @@ try:
 except:
     'Mayavi not installed'
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 import matplotlib
-matplotlib.use('Qt4Agg')
-matplotlib.rcParams['backend.qt4']='PyQt4'
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+matplotlib.use('Qt5Agg')
+matplotlib.rcParams['backend.qt5']='PyQt5'
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
@@ -170,7 +171,7 @@ class SubSegWin(QDialog):    # any super class is okay
 
 
         self.heightmin = QDoubleSpinBox()
-        self.connect(self.heightmin, SIGNAL('valueChanged(double)'), self.color_restore)
+        self.heightmin.valueChanged.connect(self.color_restore)
 
         self.heightmin.setObjectName("zmin")
         self.heightmin.setSingleStep(0.01)
@@ -178,7 +179,7 @@ class SubSegWin(QDialog):    # any super class is okay
         self.heightmin.setValue(self.subsegdata['ss_z'][0])
 
         self.heightmax = QDoubleSpinBox()
-        self.connect(self.heightmax, SIGNAL('valueChanged(double)'), self.color_restore)
+        self.heightmax.valueChanged.connect(self.color_restore)
         self.heightmax.setSingleStep(0.01)
         self.heightmax.setObjectName("zmax")
         self.heightmax.setRange(0.,self.gparent.L.maxheight)
@@ -189,10 +190,10 @@ class SubSegWin(QDialog):    # any super class is okay
         self.offset.setRange(-1.,1.)
         self.offset.setValue(self.subsegdata['ss_offset'])
 
-        self.connect(self.heightmin, SIGNAL('valueChanged(double)'), self.parent.force_ss_minmax)
-        self.connect(self.heightmax, SIGNAL('valueChanged(double)'), self.parent.force_ss_minmax)
-        self.connect(self.heightmin, SIGNAL('valueChanged(double)'), self.parent.force_minmax_previous)
-        self.connect(self.heightmax, SIGNAL('valueChanged(double)'), self.parent.force_minmax_previous)
+        self.heightmin.valueChanged.connect(self.parent.force_ss_minmax)
+        self.heightmax.valueChanged.connect(self.parent.force_ss_minmax)
+        self.heightmin.valueChangedconnect(self.parent.force_minmax_previous)
+        self.heightmax.valueChanged.connect(self.parent.force_minmax_previous)
 
     def color_restore(self, event):
         """ retore black color to SpinBox
@@ -293,7 +294,7 @@ class PropertiesWin(QDialog):    # any super class is okay
 
         self.Nss = len(self.subsegdata['ss_name'])
 
-        # order subseg in order of zmin to zmax
+        # order subseg in order of zmin to zmax
         z = np.array(self.subsegdata['ss_z'])
 
         self.sszo = np.argsort(z[:,0])[::-1]
@@ -352,7 +353,7 @@ class PropertiesWin(QDialog):    # any super class is okay
                 wid = self.dwidget[k]
                 widkey = k
                 break
-        # here it is supposed that larger key number are at the lowest level
+        # here it is supposed that larger key number are at the lowest level
         lw = self.dwidget.keys()
         lw.sort()
         ulw = lw.index(k)
@@ -386,7 +387,7 @@ class PropertiesWin(QDialog):    # any super class is okay
         sub = self.parent.L.Gs.node[self.parent.selectl.nsel]
         Nss = sub['iso']
 
-        # if len(Nss) == 1 => this is the segment and not subseg
+        # if len(Nss) == 1 => this is the segment and not subseg
         if len(Nss) != 0:
             for uss,ss in enumerate(Nss):
                 node = self.parent.L.Gs.node[ss]
@@ -421,18 +422,18 @@ class PropertiesWin(QDialog):    # any super class is okay
             self.close()
 
         # diffseg = len(self.dwidget) - len(iso) 
-        # # try to reaffect segment number to existing ones
+        # # try to reaffect segment number to existing ones
         # if diffseg == 0:
-        #     # same number of created seg than existing before edit
+        #     # same number of created seg than existing before edit
         #     segID = iso
         # elif diffseg > 0 :
-        #     # segments have been added
+        #     # segments have been added
         #     segID = iso + [-1]*diffseg
         # elif diffseg < 0:
-        #     # segments have been removed
+        #     # segments have been removed
         #     pass
         for w in self.dwidget.values():
-            # get nodes
+            # get nodes
             zmin = w.heightmin.value()
             zmax = w.heightmax.value()
             offset = w.offset.value()
@@ -451,8 +452,8 @@ class PropertiesWin(QDialog):    # any super class is okay
                                         offset=offset,
                                         verbose=False)
             newID.append(w.subsegdata['ss_ID'])
-        # determine if a segment has been removed, and then removeit from Gs
-        # seg to be removed
+        # determine if a segment has been removed, and then removeit from Gs
+        # seg to be removed
         bsegtbr = [i not in newID for i in iso]
         utbr = np.where(bsegtbr)[0]
         if len(utbr) > 0 :
@@ -669,7 +670,7 @@ class Overset(QMainWindow):
         self.xx0.setSingleStep(0.01)
         self.xx0.setRange(-1000., 1000.)
         self.xx0.setValue(0)
-        self.connect(self.xx0, SIGNAL('valueChanged(double)'), self.refresh)
+        self.xx0.SIGNAL.connect(self.refresh)
 
 
         self.yy0 = QDoubleSpinBox()
@@ -677,7 +678,7 @@ class Overset(QMainWindow):
         self.yy0.setSingleStep(0.01)
         self.yy0.setRange(-1000., 1000.)
         self.yy0.setValue(0)
-        self.connect(self.yy0, SIGNAL('valueChanged(double)'), self.refresh)
+        self.yy0.valueChanged.connect(self.refresh)
 
 
         self.da = QDoubleSpinBox()
@@ -692,7 +693,7 @@ class Overset(QMainWindow):
         self.db.setSingleStep(0.01)
         self.db.setRange(1, 10000.)
         self.db.setValue(10)
-        self.connect(self.da, SIGNAL('valueChanged(double)'), self.refresh)
+        self.db.valueChanged.connect(self.refresh)
 
         vbox = QVBoxLayout()
 
@@ -702,7 +703,7 @@ class Overset(QMainWindow):
         y0 = QLabel('origin y')
         da = QLabel('x')
         db = QLabel('y')
-        self.connect(self.db, SIGNAL('valueChanged(double)'), self.refresh)
+        self.db.SIGNAL.connect(self.refresh)
 
 
 
@@ -742,14 +743,14 @@ class Overset(QMainWindow):
         self.ax = self.figure.add_subplot(111)
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
-        self.canvas = FigureCanvas(self.figure)
+        self.canvas = FigureCanvas(self, self.figure)
         self.canvas.setParent(self.main_frame)
 
         self.kpress = self.figure.canvas.mpl_connect('key_press_event', self.flip)
 
         self.mpress = self.figure.canvas.mpl_connect('button_press_event', self.on_press)
         self.mrelea = self.figure.canvas.mpl_connect('button_release_event', self.on_release)
-        self.kmove = self.figure.canvas.mpl_connect('motion_notify_event', self.on_motion)
+	self.kmove = self.figure.canvas.mpl_connect('motion_notify_event', self.on_motion)
 
 
         self.canvas.setFocusPolicy( Qt.ClickFocus )
@@ -1168,36 +1169,23 @@ class AppForm(QMainWindow):
 
     def on_about(self):
         msg = """ This is the PyLayers' Stand-Alone Layout Editor (Alpha)
-
          This tool allows to edit/modyfy a building floor plan and/or constitutive materials.
          Once saved, the layout s ready to be used with PyLayers simunlation tools.
-
-
-
          Shortcuts:
          ------------
-
          F1 : Select mode
          F2 : New segment with current active Layer
          F3 : Edit segment properties
-
          g : toggle grid
          ctrl+g : choose grid properties
-
          CTRL + o : Open Layout
          CTRL + s : Save Layout
          CTRL + q : Quit Editor
          escape : back to a stable state
-
          More hints about editing can be found in the status bar.
-
-
-
          Thank you for using Pylayers and this tool
-
          The Pylayers' Dev Team
          www.pylayers.org
-
         """
         QMessageBox.about(self, "Pylayers' Stand-Alone Layout Editor (Alpha)", msg.strip())
 
@@ -1304,18 +1292,15 @@ class AppForm(QMainWindow):
         # self.canvas.mpl_connect('pick_event', self.on_pick)
         self.selectl = SelectL2(self.L,fig=self.fig,ax=self.axes)
 
-        self.cid1 = self.canvas.mpl_connect('button_press_event',
-                                           self.selectl.OnClick)
-        self.cid2 = self.canvas.mpl_connect('button_release_event',
-                                           self.selectl.OnClickRelease)
-        self.cid3 = self.canvas.mpl_connect('motion_notify_event',
-                                           self.selectl.OnMotion)
-        self.cid4 = self.canvas.mpl_connect('key_press_event',
-                                           self.selectl.OnPress)
-        self.cid5 = self.canvas.mpl_connect('key_release_event',
-                                           self.selectl.OnRelease)
-        self.cid6 = self.canvas.mpl_connect('button_release_event',
-                                           self.on_release)
+	print "one error on line 1295"
+       	self.selectl = SelectL2(self.L,fig=self.fig,ax=self.axes)
+
+        self.cid1 = self.canvas.mpl_connect('button_press_event', self.selectl.OnClick)
+        self.cid2 = self.canvas.mpl_connect('button_release_event', self.selectl.OnClickRelease)
+        self.cid3 = self.canvas.mpl_connect('motion_notify_event', self.selectl.OnMotion)
+        self.cid4 = self.canvas.mpl_connect('key_press_event', self.selectl.OnPress)
+        self.cid5 = self.canvas.mpl_connect('key_release_event', self.selectl.OnRelease)
+        self.cid6 = self.canvas.mpl_connect('button_release_event', self.on_release)
         self.canvas.setFocusPolicy( Qt.ClickFocus )
         self.canvas.setFocus()
 
@@ -1342,14 +1327,14 @@ class AppForm(QMainWindow):
 
 
     def shortcuts(self):
-        esc = QShortcut(self)
-        esc.setKey("escape")
-        self.connect(esc, SIGNAL("activated()"), self.selectnodes)
+        self.esc = QShortcut(self)
+        self.esc.setKey("escape")
+        self.esc.activated.connect(self.selectnodes)
 
     def refresh(self):
         f5 = QShortcut(self)
         f5.setKey("F5")
-        self.connect(f5, SIGNAL("activated()"), self.selectl.refresh)
+        self.f5.SIGNAL.connect(self.selectl.refresh)
 
 
     def create_menu(self):
@@ -1541,20 +1526,21 @@ class AppForm(QMainWindow):
     def create_action(  self, text, slot=None, shortcut=None,
                         icon=None, tip=None, checkable=False,
                         signal="triggered()"):
-        action = QAction(text, self)
+        self.action = QAction(text, self)
         if icon is not None:
-            action.setIcon(QIcon(":/%s.png" % icon))
+            self.action.setIcon(QIcon(":/%s.png" % icon))
         if shortcut is not None:
-            action.setShortcut(shortcut)
+            self.action.setShortcut(shortcut)
         if tip is not None:
-            action.setToolTip(tip)
-            action.setStatusTip(tip)
+            self.action.setToolTip(tip)
+            self.action.setStatusTip(tip)
         if slot is not None:
-            self.connect(action, SIGNAL(signal), slot)
+	    #print 'you found an error'
+            self.action.triggered.connect(slot)
         if checkable:
-            action.setCheckable(True)
+            self.action.setCheckable(True)
 
-        return action
+        return self.action
 
 
 def main():
