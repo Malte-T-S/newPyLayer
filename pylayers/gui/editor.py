@@ -670,7 +670,7 @@ class Overset(QMainWindow):
         self.xx0.setSingleStep(0.01)
         self.xx0.setRange(-1000., 1000.)
         self.xx0.setValue(0)
-        self.xx0.SIGNAL.connect(self.refresh)
+        self.xx0.valueChanged.connect(self.refresh)
 
 
         self.yy0 = QDoubleSpinBox()
@@ -703,7 +703,7 @@ class Overset(QMainWindow):
         y0 = QLabel('origin y')
         da = QLabel('x')
         db = QLabel('y')
-        self.db.SIGNAL.connect(self.refresh)
+        self.db.valueChanged.connect(self.refresh)
 
 
 
@@ -1334,7 +1334,7 @@ class AppForm(QMainWindow):
     def refresh(self):
         f5 = QShortcut(self)
         f5.setKey("F5")
-        self.f5.SIGNAL.connect(self.selectl.refresh)
+        self.f5.activated.connect(self.selectl.refresh)
 
 
     def create_menu(self):
