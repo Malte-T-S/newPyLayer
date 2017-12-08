@@ -743,7 +743,7 @@ class Overset(QMainWindow):
         self.ax = self.figure.add_subplot(111)
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
-        self.canvas = FigureCanvas(self, self.figure)
+        self.canvas = FigureCanvas(self.figure)
         self.canvas.setParent(self.main_frame)
 
         self.kpress = self.figure.canvas.mpl_connect('key_press_event', self.flip)
