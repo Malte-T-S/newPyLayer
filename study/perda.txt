@@ -1,0 +1,204 @@
+def Losst(L,fGHz,p1,p2,dB=True):
+    """  calculate Losses between links p1 p2
+    Parameters
+    ----------
+    L   : Layout object
+    fGHz : np.array
+           frequency GHz
+    p1 : source points
+        (2 x Np1) array or (2,) array
+    p2 : observation point
+        (2 x Np2) array or (2,) array
+    dB : boolean
+    Examples
+    --------
+    .. plot::
+        :include-source:
+        >>> import matplotlib.pyplot as plt
+        >>> from pylayers.measures.mesuwb import *
+        >>> from pylayers.antprop.loss import *
+        >>> S = Simul()
+        >>> S.layout('WHERE1.ini')
+        >>> fGHz = 4
+        >>> Tx,Rx = ptw1()
+        >>> Lwo,Lwp,Edo,Edp = Losst(S.L,fGHz,Tx.T,Rx[1,0:2],dB=True)
+        >>> fig=plt.figure(figsize=(20,10))
+        >>> fig,ax = S.L.showGs(fig=fig)
+        >>> tit = plt.title('test Losst')
+        >>> sc2 = ax.scatter(Rx[1,0],Rx[1,1],s=20,marker='x',c='k')
+        >>> sc1 = ax.scatter(Tx[:,0],Tx[:,1],s=20,c=Lwo,linewidth=0)
+        >>> cb = plt.colorbar(sc1)
+        >>> cb.set_label('dB')
+        >>> plt.show()
+    See Also
+    --------
+    pylayers.antprop.coverage
+    pylayers.slab.Interface.losst
+    """
+
+    if (type(fGHz)==float) | (type(fGHz)==int):
+        fGHz=np.array([fGHz],dtype=float)
+
+    sh1 = np.shape(p1)
+    sh2 = np.shape(p2)
+
+    if (len(sh1)>1) & (len(sh2)>1):
+        Nlink = max(sh1[1],sh2[1])
+    if (len(sh1)>1) & (len(sh2)<2):
+        Nlink = sh1[1]
+    if (len(sh1)<2) & (len(sh2)>1):
+        Nlink = sh2[1]
+    if (len(sh1)<2) & (len(sh2)<2):
+        Nlink = 1
+
+    # determine incidence angles on segment crossing p1-p2 segment
+    #data = L.angleonlink(p1,p2)
+    data = L.angleonlink3(p1,p2)
+    
+    # as many slabs as segments and subsegments
+    us    = data['s'] 
+    slabs = np.array([ L.Gs.node[x]['name'] for x in us ])
+
+
+
+
+
+    #slabs = L.sla[us]
+    check = np.where(slabs=='')
+
+    #
+    # As segment numbering is not necessarily contiguous 
+    # there exist void string '' in slabs
+    cslab = list(np.unique(slabs))
+    if '' in cslab:
+        cslab.remove('')
+    if 'AIR' in cslab:
+        cslab.remove('AIR')
+    if '_AIR' in cslab:
+        cslab.remove('_AIR')
+
+
+    LossWallo = np.zeros((len(fGHz),Nlink))
+    LossWallp = np.zeros((len(fGHz),Nlink))
+    EdWallo = np.zeros((len(fGHz),Nlink))
+    EdWallp = np.zeros((len(fGHz),Nlink))
+    
+    for slname in cslab:
+        # u index of slabs of name slname
+        # data['a'][u] angle
+        # data['s'][u] segment number including subsegment
+        u = np.nonzero(np.array(slabs)==slname)[0]
+        #
+        # calculate Loss for slab slname
+        #
+        lko,lkp  = L.sl[slname].losst(fGHz,data['a'][u])
+        #
+        # calculate Excess delay for slab slname
+        #
+        do , dp  = L.sl[slname].excess_grdelay(theta=data['a'][u])
+        # data['i'][u] links number
+        indexu = data['i'][u]
+        # reduce to involved links
+        involved_links, indices = np.unique(indexu,return_index=True)
+        indicep = np.hstack((indices[1:],np.array([len(indexu)])))
+        # range on involved links
+        irange = np.arange(len(involved_links))
+        #
+        # sum contribution of slab of a same link
+        #
+        Wallo = np.array(map(lambda x: np.sum(lko[:,indices[x]:indicep[x]],axis=1),irange)).T
+        Wallp = np.array(map(lambda x: np.sum(lkp[:,indices[x]:indicep[x]],axis=1),irange)).T
+
+        Edo = np.array(map(lambda x: np.sum(do[indices[x]:indicep[x]]),irange)).T
+        Edp = np.array(map(lambda x: np.sum(dp[indices[x]:indicep[x]]),irange)).T
+
+        LossWallo[:,involved_links] = LossWallo[:,involved_links] + Wallo
+        LossWallp[:,involved_links] = LossWallp[:,involved_links] + Wallp
+
+        EdWallo[:,involved_links] = EdWallo[:,involved_links] + Edo
+        EdWallp[:,involved_links] = EdWallp[:,involved_links] + Edp
+
+
+    # Managing Ceil / Floor transmission
+
+
+    # check crossing ceil
+    if (p1[2,:]> L.zceil).any() or (p2[2,:]> L.zceil).any():
+
+        # WARNING : this test sohould be done individually
+        if (p1[2]>p2[2]).all():
+            v0 = p1
+            v1 = p2
+        else:
+            v0 = p2
+            v1 = p1
+
+        uu = v0 - v1
+        # 1 x N
+        nu = np.sqrt(np.sum(uu * uu, axis=0))
+        # 3 x N
+        un = uu / nu[np.newaxis, :]
+        dotp = np.einsum('ij,i->j',un,np.array([0,0,1]))
+        alphas = np.arccos(dotp)
+
+        #
+        # calculate Loss for slab CEIL
+        #
+        lkco,lkcp  = L.sl['CEIL'].losst(fGHz,alphas)
+        #
+        # calculate Excess delay for slab CEIL
+        #
+        dco , dcp  = L.sl['CEIL'].excess_grdelay(theta=alphas)
+
+
+
+        LossWallo = LossWallo + lkco
+        LossWallp = LossWallp + lkcp
+
+        EdWallo = EdWallo + dco
+        EdWallp = EdWallp + dcp
+
+
+    # check crossing floor
+    if (p1[2,:]< L.zfloor).any() or (p2[2,:]< L.zfloor).any():
+
+
+        # WARNING : this test sohould be done individually
+        if (p1[2]>p2[2]).all():
+            v0 = p1
+            v1 = p2
+        else:
+            v0 = p2
+            v1 = p1
+
+        uu = v0 - v1
+        # 1 x N
+        nu = np.sqrt(np.sum(uu * uu, axis=0))
+        # 3 x N
+        un = uu / nu[np.newaxis, :]
+        dotp = np.einsum('ij,i->j',un,np.array([0,0,1]))
+        alphas = np.arccos(dotp)
+
+        #
+        # calculate Loss for slab CEIL
+        #
+        lkfo,lkfp  = L.sl['FLOOR'].losst(fGHz,alphas)
+        #
+        # calculate Excess delay for slab CEIL
+        #
+        dfo , dfp  = L.sl['FLOOR'].excess_grdelay(theta=alphas)
+
+
+
+        LossWallo = LossWallo + lkfo
+        LossWallp = LossWallp + lkfp
+
+        EdWallo = EdWallo + dfo
+        EdWallp = EdWallp + dfp
+
+
+    if not dB:
+        LossWallo = 10**(-LossWallo/10)
+        LossWallp = 10**(-LossWallp/10)
+
+    return(LossWallo,LossWallp,EdWallo,EdWallp)
