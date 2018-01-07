@@ -1008,9 +1008,9 @@ class Coverage(PyLayers):
             	title = title + 'intensity : '+' fc = '+str(self.fGHz[f])+' GHz'+ ' polar : '+polar            	
                 legcb = 'V/m'
                 if polar=='o':
-                    V = np.power(10, (self.CmWo + 20 * np.log10(self.fGHz[f]) + 77.2)/20) * 0.000001
+                    V = np.power(10, (self.CmWo + 20 * np.log10(self.fGHz[f] * 1000) + 77.2)/20) * 0.000001
                 if polar=='p':
-                    V = np.power(10, (self.CmWp + 20 * np.log10(self.fGHz[f]) + 77.2)/20) * 0.000001
+                    V = np.power(10, (self.CmWp + 20 * np.log10(self.fGHz[f] * 1000) + 77.2)/20) * 0.000001
 
             if a == -1:
                 V = np.max(V[f,:,:],axis=1)
