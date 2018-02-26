@@ -257,6 +257,16 @@ type = indoor
 140 = {'name': 'WALL', 'connect': [-76, -77], 'z':(0.0, 4.17)}
 141 = {'name': 'WALL', 'connect': [-15, -71], 'z':(0.0, 4.17)}
 142 = {'name': 'WALL', 'connect': [-71, -14], 'z':(0.0, 4.17)}
+143 = {'name': 'WALL', 'connect': [-27, -28], 'z':(0.0, 4.17)}
+144 = {'name': 'WALL', 'connect': [-28, -29], 'z':(0.0, 4.17)}
+145 = {'name': 'WALL', 'connect': [-29, -30], 'z':(0.0, 4.17)}
+146 = {'name': 'WALL', 'connect': [-30, -31], 'z':(0.0, 4.17)}
+146 = {'name': 'WALL', 'connect': [-31, -32], 'z':(0.0, 4.17)}
+146 = {'name': 'WALL', 'connect': [-32, -33], 'z':(0.0, 4.17)}
+146 = {'name': 'WALL', 'connect': [-33, -34], 'z':(0.0, 4.17)}
+146 = {'name': 'WALL', 'connect': [-34, -35], 'z':(0.0, 4.17)}
+146 = {'name': 'WALL', 'connect': [-35, -36], 'z':(0.0, 4.17)}
+146 = {'name': 'WALL', 'connect': [-36, -37], 'z':(0.0, 4.17)}
 
 [files]
 furniture = 
