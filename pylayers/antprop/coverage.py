@@ -932,6 +932,26 @@ class Coverage(PyLayers):
         b = self.grid[0,1]
         t = self.grid[-1,-1]
 
+	arq = open('capacidade.txt','w')
+	texto = '''dBm e V/m \n'''
+	arq.write(texto)
+	arq.close()
+
+	arq = open('cobertura.txt','w')
+	texto = '''dBm e V/m \n'''
+	arq.write(texto)
+	arq.close()
+
+	arq = open('intensidade.txt','w')
+	texto = '''dBm e V/m \n'''
+	arq.write(texto)
+	arq.close()
+
+	arq = open('snr.txt','w')
+	texto = '''dBm e V/m \n'''
+	arq.write(texto)
+	arq.close()
+
         if typ=='best':
             title = title + 'Best server'+' fc = '+str(self.fGHz[f])+' GHz'+ ' polar : '+polar
             for ka in range(self.na):
@@ -975,6 +995,10 @@ class Coverage(PyLayers):
                     V = self.snro
                 if polar=='p':
                     V = self.snrp
+		with open('snr.txt','a') as myfile:
+			myfile.write(str(self.snrp))
+			myfile.write('\n------------------\n')
+			myfile.write(str(V))
             if typ=='capacity':
                 title = title + 'Capacity : '+' fc = '+str(self.fGHz[f])+' GHz'+ ' polar : '+polar
                 legcb = 'Mbit/s'
@@ -982,6 +1006,10 @@ class Coverage(PyLayers):
                     V = self.bmhz.T[np.newaxis,:]*np.log(1+self.sinro)/np.log(2)
                 if polar=='p':
                     V = self.bmhz.T[np.newaxis,:]*np.log(1+self.sinrp)/np.log(2)
+		with open('capacidade.txt','a') as myfile:
+			myfile.write(str(self.bmhz.T[np.newaxis,:]*np.log(1+self.sinrp)/np.log(2)))
+			myfile.write('\n------------------\n')
+			myfile.write(str(V))
             if typ=='pr':
                 title = title + 'Pr : '+' fc = '+str(self.fGHz[f])+' GHz'+ ' polar : '+polar
                 if dB:
@@ -992,6 +1020,13 @@ class Coverage(PyLayers):
                     V = self.CmWo
                 if polar=='p':
                     V = self.CmWp
+		with open('cobertura.txt','a') as myfile:
+			myfile.write(str(self.fGHz[f]))
+			myfile.write('\n')
+			myfile.write('\n')
+			myfile.write('\n')
+			myfile.write(str(self.CmWp))
+			myfile.write('\n')
 
             if typ=='loss':
                 title = title + 'Loss : '+' fc = '+str(self.fGHz[f])+' GHz'+ ' polar : '+polar
@@ -1003,14 +1038,18 @@ class Coverage(PyLayers):
                     V = self.Lwo*self.freespace
                 if polar=='p':
                     V = self.Lwp*self.freespace
-
+            
             if typ=='intensity':
-            	title = title + 'intensity : '+' fc = '+str(self.fGHz[f])+' GHz'+ ' polar : '+polar            	
+                title = title + 'Intensity : '+' fc = '+str(self.fGHz[f])+' GHz'+ ' polar : '+ polar
                 legcb = 'V/m'
-                if polar=='o':
-                    V = np.power(10, (self.CmWo + 20 * np.log10(self.fGHz[f] * 1000) + 77.2)/20) * 0.000001
-                if polar=='p':
-                    V = np.power(10, (self.CmWp + 20 * np.log10(self.fGHz[f] * 1000) + 77.2)/20) * 0.000001
+                if polar=='o':        
+                    V = np.power(10, ((self.CmWo + 20 * np.log10(self.fGHz[f]*1000) + 77.2)/20)) * 0.000001
+                if polar=='p':    
+                    V = np.power(10, ((self.CmWp + 20 * np.log10(self.fGHz[f]*1000) + 77.2)/20)) * 0.000001
+		with open('intensidade.txt','a') as myfile:
+			myfile.write(str(self.CmWp))
+			myfile.write('\n------------------\n')
+			myfile.write(str(V))
 
             if a == -1:
                 V = np.max(V[f,:,:],axis=1)
