@@ -161,7 +161,17 @@ class Coverage(PyLayers):
 
         self.temperaturek  = eval(self.rxopt['temperaturek'])
         self.noisefactordb = eval(self.rxopt['noisefactordb'])
-	self.modelo = eval(self.rxopt['modelo'])
+	self.PtDB = eval(self.rxopt['PtDB'])
+	self.Gt = eval(self.rxopt['Gt'])
+	self.Gr = eval(self.rxopt['Gr'])
+	self.do = eval(self.rxopt['do'])
+	self.Prdo = eval(self.rxopt['Prdo'])
+	self.n = eval(self.rxopt['n'])
+	self.desviopadrao = eval(self.rxopt['desviopadrao'])
+	self.x0 = eval(self.rxopt['x0'])
+	self.y0 = eval(self.rxopt['y0'])
+	self.xt = eval(self.rxopt['xt'])
+	self.yt = eval(self.rxopt['yt'])
 
         # show section
         self.bshow = str2bool(self.showopt['show'])
@@ -452,69 +462,11 @@ class Coverage(PyLayers):
         # f x g x a
 	 
 	# CmW : Received Power coverage in mW	
-	if self.modelo == 10:
-	    print 'Motley Keenan'
-            self.CmWo = 10**(self.ptdbm[np.newaxis,...]/10.)*self.Lwo*self.freespace*tgain
-            self.CmWp = 10**(self.ptdbm[np.newaxis,...]/10.)*self.Lwp*self.freespace*tgain
-	    if self.typ == 'intensity':	    
-		self.cmWo = 10*np.log10(self.cmWo) 
-		self.cmWo = 10*np.log10(self.cmWp)
-	    print '\n'
-	    print len(self.CmWo)
-	    print '\n'
-	    print self.CmWo
-	    print '\n'
-	    print len(self.CmWo[0])
-	    print '\n'
-	    print self.CmWo[0]
-	    print '\n'
-	    print len(self.CmWo[0][0])
-	    print '\n'
-	    print self.CmWo[0][0]
-	    print '\n'
-	elif self.modelo == 20:
-	    PtDB = 15.5
-	    Gt = 5
-	    Gr = 0
-	    f = 5200
-	    do = 0.000455412
-	    Prdo = -29.4
-	    Lf = PtDB - Prdo + Gt + Gr
-	    n = 1.7145
-	    desviopadrao2 = 4.3757
-	    x0 = 2.83
-	    y0 = 0.54
-
-	    medidas1 = []
-
-	    #ainda falta deixar dinamico esse codigo
-	    dx = np.linspace(0, 6, self.nx)
-	    dy = np.linspace(0, 7.5, self.ny)
-
-	    for i in range(self.ny):
-		medidas1.append([])
-
-	    for i in range(self.ny):
-		for j in range(self.nx):
-		    medidas1[i].append(np.sqrt(np.power(dx[j] - x0, 2) + np.power(dy[i] - y0, 2)) / 1000)
-
-	    desvio = 0
-
-	    X = np.random.normal(0, desviopadrao2, len(medidas1))
-
-	    PL2 = []
-
-	    for i in range(self.ny):
-		PL2.append([])
-
-	    for i in range(self.ny):
-		for j in range(self.nx):
-		    PL2[i].append(Lf + 10 * n * np.log10(medidas1[i][j] / do) + X[i])
-       
-	    print 'Sombreamento Log Normal'
-	    self.CmWo = PL2
-            self.CmWp = PL2
-	    print len(PL2)
+        self.CmWo = 10**(self.ptdbm[np.newaxis,...]/10.)*self.Lwo*self.freespace*tgain
+        self.CmWp = 10**(self.ptdbm[np.newaxis,...]/10.)*self.Lwp*self.freespace*tgain
+	if self.typ == 'intensity':	    
+	    self.cmWo = 10*np.log10(self.cmWo) 
+	    self.cmWo = 10*np.log10(self.cmWp)
 
         if snr:
             self.evsnr()
@@ -711,7 +663,7 @@ class Coverage(PyLayers):
 
         f = kwargs['f']
         a = kwargs['a']
-        assert typ in ['best','egd','sinr','snr','capacity','pr','loss', 'intensity'],"typ unknown in show coverage"
+        assert typ in ['best','egd','sinr','snr','capacity','pr','loss', 'intensity', 'losssombreamento', 'prsombreamento'],"typ unknown in show coverage"
         best = kwargs['best']
 
         dB = kwargs['db']
@@ -778,6 +730,7 @@ class Coverage(PyLayers):
                     V = self.bmhz.T[np.newaxis,:]*np.log(1+self.sinro)/np.log(2)
                 if polar=='p':
                     V = self.bmhz.T[np.newaxis,:]*np.log(1+self.sinrp)/np.log(2)
+
             if typ=='pr':
                 title = title + 'Pr : '+' fc = '+str(self.fGHz[f])+' GHz'+ ' polar : '+polar
                 if dB:
@@ -788,7 +741,6 @@ class Coverage(PyLayers):
 		    V = self.CmWo
                 if polar=='p':
                     V = self.CmWp
-		print V
 
             if typ=='loss':
                 title = title + 'Loss : '+' fc = '+str(self.fGHz[f])+' GHz'+ ' polar : '+polar
@@ -800,6 +752,30 @@ class Coverage(PyLayers):
                     V = self.Lwo*self.freespace
                 if polar=='p':
                     V = self.Lwp*self.freespace
+
+	    if typ=='losssombreamento':
+		#relaxa que esse so muda no final
+		title = title + 'Loss Log : '+' fc = '+str(self.fGHz[f])+' GHz'+ ' polar : '+polar
+                if dB:
+                    legcb = 'dB'
+                else:
+                    lgdcb = 'Linear scale'
+                if polar=='o':
+		    V = self.CmWo
+                if polar=='p':
+                    V = self.CmWp
+
+	    if typ=='prsombreamento':
+		#relaxa que esse so muda no final
+		title = title + 'Pr Log : '+' fc = '+str(self.fGHz[f])+' GHz'+ ' polar : '+polar
+                if dB:
+                    legcb = 'dBm'
+                else:
+                    lgdcb = 'Linear scale'
+                if polar=='o':
+		    V = self.CmWo
+                if polar=='p':
+                    V = self.CmWp
             
             if typ=='intensity':
                 title = title + 'Intensity : '+' fc = '+str(self.fGHz[f])+' GHz'+ ' polar : '+ polar
@@ -808,6 +784,7 @@ class Coverage(PyLayers):
                     V = np.power(10, ((self.CmWo + 20 * np.log10(self.fGHz[f]*1000) + 77.2)/20)) * 0.000001
                 if polar=='p':    
                     V = np.power(10, ((self.CmWp + 20 * np.log10(self.fGHz[f]*1000) + 77.2)/20)) * 0.000001
+
             if a == -1:
                 V = np.max(V[f,:,:],axis=1)
             else:
@@ -820,18 +797,89 @@ class Coverage(PyLayers):
                 U = V
 
             if dB and typ != 'intensity':
-                U = 10*np.log10(U)
+		if typ=='losssombreamento' or typ=='prsombreamento':
+		    f = self.fGHz[f] * 1000
+		    Lf = self.PtDB - self.Prdo + self.Gt + self.Gr
+
+	    	    medidas1 = []
+
+	    	    dx = np.linspace(0, self.xt, self.nx)
+	    	    dy = np.linspace(0, self.yt, self.ny)
+
+	    	    for i in range(self.ny):
+		        medidas1.append([])
+
+	    	    for i in range(self.ny):
+		        for j in range(self.nx):
+		    	    medidas1[i].append(np.sqrt(np.power(dx[j] - self.x0, 2) + np.power(dy[i] - self.y0, 2)) / 1000)
+
+	    	    desvio = 0
+
+	    	    X = np.random.normal(0, self.desviopadrao, len(medidas1))
+
+	    	    PL2 = []
+		    maior, menor = 0, 100
+
+	    	    for i in range(self.ny):
+		        PL2.append([])
+
+	    	    for i in range(self.ny):
+		        for j in range(self.nx):
+			    oi = Lf + 10 * n * np.log10(medidas1[i][j] / do) + X[i]
+		            PL2[i].append(oi)
+			    if (maior < oi):
+			        maior = oi
+			    if (menor > oi):
+			        menor = oi
+
+		    menor = np.floor(menor/10) * 10
+		    maior = np.ceil(maior/10) * 10
+		    
+		    if typ=='prsombreamento':
+			maior, menor = -100, 0
+			pr = []
+			for i in range(self.ny):
+		            pr.append([])
+
+	    	        for i in range(self.ny):
+		            for j in range(self.nx):
+			        oi = self.PtDB - PL2[i][j]
+		                pr[i].append(oi)
+			        if (maior < oi):
+			            maior = oi
+			        if (menor > oi):
+			            menor = oi
+			menor = np.floor(menor/10) * 10
+		        maior = np.ceil(maior/10) * 10
+			U = self.PtDB - PL2
+		    else:
+			U = PL2
+		else:
+                    U = 10*np.log10(U)
 		#print U
+
+	    arq = open('cobertura.txt', 'w')
+	    texto = []
+	    for linha in U:
+		texto.append(str(linha) + '\n')
+	    arq.writelines(texto)
+	    arq.close()
 
             if 'vmin' in kwargs:
                 vmin = kwargs['vmin']
             else:
-                vmin = U.min()
+		if typ=='losssombreamento' or typ=='prsombreamento':
+		    vmin = menor
+		else:
+                    vmin = U.min()
 
             if 'vmax' in kwargs:
                 vmax = kwargs['vmax']
             else:
-                vmax = U.max()
+		if typ=='losssombreamento' or typ=='prsombreamento':
+		    vmax = maior
+		else:
+                    vmax = U.max()
 
             if self.mode!='file':
                 img = ax.imshow(U,
@@ -850,13 +898,6 @@ class Coverage(PyLayers):
                                vmin=vmin,
                                vmax=vmax)
 
-	    arq = open('cobertura.txt', 'w')
-	    texto = []
-	    for linha in U:
-		texto.append(str(linha) + '\n')
-	    arq.writelines(texto)
-	    arq.close()
-
             for k in range(self.na):
                 ax.annotate(str(k),xy=(self.pa[0,k],self.pa[1,k]))
             ax.set_title(title)
@@ -865,12 +906,13 @@ class Coverage(PyLayers):
             cax = divider.append_axes("right", size="5%", pad=0.05)
             clb = fig.colorbar(img,cax)
             clb.set_label(legcb)
-            if best:
-                if self.mode<>'file':
-                    if polar=='o':
-                        ax.contour(np.sum(self.bestsvo,axis=2)[f,:].reshape(self.nx,self.ny).T,extent=(l,r,b,t),linestyles='dotted')
-                    if polar=='p':
-                        ax.contour(np.sum(self.bestsvp,axis=2)[f,:].reshape(self.nx,self.ny).T,extent=(l,r,b,t),linestyles='dotted')
+	    if typ!='losssombreamento' or typ!='prsombreamento':
+                if best:
+                    if self.mode<>'file':
+                        if polar=='o':
+                            ax.contour(np.sum(self.bestsvo,axis=2)[f,:].reshape(self.nx,self.ny).T,extent=(l,r,b,t),linestyles='dotted')
+                        if polar=='p':
+                            ax.contour(np.sum(self.bestsvp,axis=2)[f,:].reshape(self.nx,self.ny).T,extent=(l,r,b,t),linestyles='dotted')
 
         # display access points
         if a==-1:
@@ -879,75 +921,6 @@ class Coverage(PyLayers):
             ax.scatter(self.pa[0,a],self.pa[1,a],s=30,c='r',linewidth=0)
         plt.tight_layout()
         return(fig,ax)
-
-#    def showLoss(self,polar='o',**kwargs):
-#        """ show losses map
-#
-#        Parameters
-#        ----------
-#
-#        polar : string
-#            'o'|'p'|'both'
-#
-#        Examples
-#        --------
-#
-#        .. plot::
-#            :include-source:
-#
-#            >>> from pylayers.antprop.coverage import *
-#            >>> C = Coverage()
-#            >>> C.cover(polar='o')
-#            >>> f,a = C.show(typ='pr',figsize=(10,8))
-#            >>> plt.show()
-#        """
-#
-#        fig = plt.figure()
-#        fig,ax=self.L.showGs(fig=fig)
-#
-#        # setting the grid
-#
-#        l = self.grid[0,0]
-#        r = self.grid[-1,0]
-#        b = self.grid[0,1]
-#        t = self.grid[-1,-1]
-#
-#        Lo = self.freespace+self.Lwo
-#        Lp = self.freespace+self.Lwp
-#
-#        # orthogonal polarization
-#
-#        if polar=='o':
-#            cov = ax.imshow(Lo.reshape((self.nx,self.ny)).T,
-#                            extent=(l,r,b,t),
-#                            origin='lower',
-#                            vmin = 40,
-#                            vmax = 130)
-#            str1 = 'Map of losses, orthogonal (V) polarization, fGHz='+str(self.fGHz)
-#            title = (str1)
-#
-#        # parallel polarization
-#        if polar=='p':
-#            cov = ax.imshow(Lp.reshape((self.nx,self.ny)).T,
-#                            extent=(l,r,b,t),
-#                            origin='lower',
-#                            vmin = 40,
-#                            vmax = 130)
-#            str2 = 'Map of losses, orthogonal (V) polarization, fGHz='+str(self.fGHz)
-#            title = (str2)
-#
-#        ax.scatter(self.tx[0],self.tx[1],s=10,c='k',linewidth=0)
-#        ax.set_title(title)
-#
-#        divider = make_axes_locatable(ax)
-#        cax = divider.append_axes("right", size="5%", pad=0.05)
-#        clb = fig.colorbar(cov,cax)
-#        clb.set_label('Loss (dB)')
-#
-#        if self.show:
-#            plt.show()
-
-
 
 if (__name__ == "__main__"):
     doctest.testmod()
