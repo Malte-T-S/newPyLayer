@@ -926,3 +926,4 @@ class Coverage(PyLayers):
 
 if (__name__ == "__main__"):
     doctest.testmod()
+
