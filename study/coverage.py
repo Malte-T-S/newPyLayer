@@ -161,11 +161,11 @@ class Coverage(PyLayers):
 
         self.temperaturek  = eval(self.rxopt['temperaturek'])
         self.noisefactordb = eval(self.rxopt['noisefactordb'])
-	self.PtDB = eval(self.rxopt['PtDB'])
-	self.Gt = eval(self.rxopt['Gt'])
-	self.Gr = eval(self.rxopt['Gr'])
+	self.PtDB = eval(self.rxopt['ptdb'])
+	self.Gt = eval(self.rxopt['gt'])
+	self.Gr = eval(self.rxopt['gr'])
 	self.do = eval(self.rxopt['do'])
-	self.Prdo = eval(self.rxopt['Prdo'])
+	self.Prdo = eval(self.rxopt['prdo'])
 	self.n = eval(self.rxopt['n'])
 	self.desviopadrao = eval(self.rxopt['desviopadrao'])
 	self.x0 = eval(self.rxopt['x0'])
@@ -825,7 +825,7 @@ class Coverage(PyLayers):
 
 	    	    for i in range(self.ny):
 		        for j in range(self.nx):
-			    oi = Lf + 10 * n * np.log10(medidas1[i][j] / do) + X[i]
+			    oi = Lf + 10 * self.n * np.log10(medidas1[i][j] / self.do) + X[i]
 		            PL2[i].append(oi)
 			    if (maior < oi):
 			        maior = oi
@@ -851,7 +851,7 @@ class Coverage(PyLayers):
 			            menor = oi
 			menor = np.floor(menor/10) * 10
 		        maior = np.ceil(maior/10) * 10
-			U = self.PtDB - PL2
+			U = pr
 		    else:
 			U = PL2
 		else:
@@ -906,7 +906,9 @@ class Coverage(PyLayers):
             cax = divider.append_axes("right", size="5%", pad=0.05)
             clb = fig.colorbar(img,cax)
             clb.set_label(legcb)
-	    if typ!='losssombreamento' or typ!='prsombreamento':
+	    if typ=='losssombreamento' or typ=='prsombreamento':
+		print 'Modelo do Sombreamento Log Normal'
+	    else:
                 if best:
                     if self.mode<>'file':
                         if polar=='o':
