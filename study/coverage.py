@@ -1,17 +1,13 @@
 """
-
 Class Coverage
 ==============
-
 .. autosummary::
     :toctree: generated/
-
     Coverage.creategrid
     Coverage.cover
     Coverage.sinr
     Coverage.best
     Coverage.show
-
 """
 from pylayers.util.project import *
 #from pylayers.measures.mesuwb import *
@@ -44,10 +40,8 @@ except:
 
 class Coverage(PyLayers):
     """ Handle Layout Coverage
-
         Methods
         -------
-
         creategrid()
             create a uniform grid for evaluating losses
         cover()
@@ -56,17 +50,12 @@ class Coverage(PyLayers):
             display the map of received power
         showLoss()
             display the map of losses
-
-
         Attributes
         ----------
-
         All attributes are read from fileini ino the ini directory of the
         current project
-
         _fileini
             default coverage.ini
-
         L     : a Layout
         nx    : number of point on x
         ny    : number of point on y
@@ -74,25 +63,19 @@ class Coverage(PyLayers):
         txpe  : transmitter power emmission level
         show  : boolean for automatic display power map
         na : number of access point
-
     """
 
 
     def __init__(self,_fileini='coverage.ini'):
         """ object constructor
-
         Parameters
         ----------
-
         _fileini : string
             name of the configuration file
-
         Notes
         -----
-
         Coverage is described in an ini file.
         Default file is coverage.ini and is placed in the ini directory of the current project.
-
         """
 
 
@@ -199,15 +182,12 @@ class Coverage(PyLayers):
 
     def creategrid(self,mode='full',boundary=[],_fileini=''):
         """ create a grid
-
         Parameters
         ----------
-
         full : boolean
             default (True) use all the layout area
         boundary : (xmin,ymin,xmax,ymax)
             if full is False the boundary argument is used
-
         """
 
         if mode=="file":
@@ -289,54 +269,40 @@ class Coverage(PyLayers):
 
     def cover(self,sinr=True,snr=True,best=True):
         """ run the coverage calculation
-
         Parameters
         ----------
-
         sinr : boolean
         snr  : boolean
         best : boolean
-
         Examples
         --------
-
         .. plot::
             :include-source:
-
             >>> from pylayers.antprop.coverage import *
             >>> C = Coverage()
             >>> C.cover()
             >>> f,a=C.show(typ='sinr',figsize=(10,8))
             >>> plt.show()
-
         Notes
         -----
-
         self.fGHz is an array, it means that Coverage is calculated at once
         for a whole set of frequencies. In practice, it would be the center
         frequency of a given standard channel.
-
         This function is calling `loss.Losst` which calculates Losses along a
         straight path.
-
         In a future implementation we will
         abstract the EM solver in order to make use of other calculation
         approaches as a full or partial Ray Tracing.
-
         The following members variables are evaluated :
-
         + freespace Loss @ fGHz   PL()  PathLoss (shoud be rename FS as free space) $
         + prdbmo : Received power in dBm .. math:`P_{rdBm} =P_{tdBm} - L_{odB}`
         + prdbmp : Received power in dBm .. math:`P_{rdBm} =P_{tdBm} - L_{pdB}`
         + snro : SNR polar o (H)
         + snrp : SNR polar p (H)
-
         See Also
         --------
-
         pylayers.antprop.loss.Losst
         pylayers.antprop.loss.PL
-
         """
         #
         # select active AP
@@ -371,6 +337,7 @@ class Coverage(PyLayers):
                     self.bmhz  = np.array(self.dap[iap].s.chan[apchan[0]]['BMHz'])
 
         PnW = np.array((10**(self.noisefactordb/10.))*self.kB*self.temperaturek*self.bmhz*1e6)
+	self.pnw = PnW
         # Evaluate Noise Power (in dBm)
         self.pndbm = np.array(10*np.log10(PnW)+30)
 
@@ -486,7 +453,6 @@ class Coverage(PyLayers):
 
     def evsinr(self):
         """ calculates sinr
-
         """
 
         # na : number of access point
@@ -509,12 +475,9 @@ class Coverage(PyLayers):
 
     def evbestsv(self):
         """ determine the best server map
-
         Notes
         -----
-
         C.bestsv
-
         """
         na = self.na
         ng = self.ng
@@ -584,10 +547,8 @@ class Coverage(PyLayers):
 
     def show(self,**kwargs):
         """ show coverage
-
         Parameters
         ----------
-
         typ : string
             'pr' | 'sinr' | 'capacity' | 'loss' | 'best' | 'egd'
         grid : boolean
@@ -599,13 +560,10 @@ class Coverage(PyLayers):
             frequency index
         a : int
             access point index (-1 all access point)
-
         Examples
         --------
-
         .. plot::
             :include-source:
-
             >>> from pylayers.antprop.coverage import *
             >>> C = Coverage()
             >>> C.cover()
@@ -617,12 +575,9 @@ class Coverage(PyLayers):
             >>> plt.show()
             >>> f,a = C.show(typ='sinr',figsize=(10,8))
             >>> plt.show()
-
         See Also
         --------
-
         pylayers.gis.layout.Layout.showG
-
         """
         defaults = { 'typ': 'pr',
                      'grid': False,
@@ -663,7 +618,7 @@ class Coverage(PyLayers):
 
         f = kwargs['f']
         a = kwargs['a']
-        assert typ in ['best','egd','sinr','snr','capacity','pr','loss', 'intensity', 'losssombreamento', 'prsombreamento'],"typ unknown in show coverage"
+        assert typ in ['best','egd','sinr','snr','capacity','pr','loss', 'intensity', 'losssombreamento', 'prsombreamento','snrsombreamento'],"typ unknown in show coverage"
         best = kwargs['best']
 
         dB = kwargs['db']
@@ -776,6 +731,18 @@ class Coverage(PyLayers):
 		    V = self.CmWo
                 if polar=='p':
                     V = self.CmWp
+
+	    if typ=='snrsombreamento':
+		#relaxa que esse so muda no final
+		title = title + 'SNR Log : '+' fc = '+str(self.fGHz[f])+' GHz'+ ' polar : '+polar
+                if dB:
+                    legcb = 'dB'
+                else:
+                    lgdcb = 'Linear scale'
+                if polar=='o':
+		    V = self.CmWo
+                if polar=='p':
+                    V = self.CmWp
             
             if typ=='intensity':
                 title = title + 'Intensity : '+' fc = '+str(self.fGHz[f])+' GHz'+ ' polar : '+ polar
@@ -797,7 +764,7 @@ class Coverage(PyLayers):
                 U = V
 
             if dB and typ != 'intensity':
-		if typ=='losssombreamento' or typ=='prsombreamento':
+		if typ=='losssombreamento' or typ=='prsombreamento' or typ=='snrsombreamento':
 		    f = self.fGHz[f] * 1000
 		    Lf = self.PtDB - self.Prdo + self.Gt + self.Gr
 
@@ -852,6 +819,23 @@ class Coverage(PyLayers):
 			menor = np.floor(menor/10) * 10
 		        maior = np.ceil(maior/10) * 10
 			U = pr
+		    elif typ=='snrsombreamento':
+			maior, menor = -100, 100
+			pr = []
+			for i in range(self.ny):
+		            pr.append([])
+
+	    	        for i in range(self.ny):
+		            for j in range(self.nx):
+			        oi = PL2[i][j] / self.pnw[0][0]
+		                pr[i].append(oi)
+			        if (maior < oi):
+			            maior = oi
+			        if (menor > oi):
+			            menor = oi
+			menor = np.floor(menor/10) * 10
+		        maior = np.ceil(maior/10) * 10
+			U = pr
 		    else:
 			U = PL2
 		else:
@@ -868,7 +852,7 @@ class Coverage(PyLayers):
             if 'vmin' in kwargs:
                 vmin = kwargs['vmin']
             else:
-		if typ=='losssombreamento' or typ=='prsombreamento':
+		if typ=='losssombreamento' or typ=='prsombreamento' or typ=='snrsombreamento':
 		    vmin = menor
 		else:
                     vmin = U.min()
@@ -876,7 +860,7 @@ class Coverage(PyLayers):
             if 'vmax' in kwargs:
                 vmax = kwargs['vmax']
             else:
-		if typ=='losssombreamento' or typ=='prsombreamento':
+		if typ=='losssombreamento' or typ=='prsombreamento' or typ=='snrsombreamento':
 		    vmax = maior
 		else:
                     vmax = U.max()
@@ -906,7 +890,7 @@ class Coverage(PyLayers):
             cax = divider.append_axes("right", size="5%", pad=0.05)
             clb = fig.colorbar(img,cax)
             clb.set_label(legcb)
-	    if typ=='losssombreamento' or typ=='prsombreamento':
+	    if typ=='losssombreamento' or typ=='prsombreamento' or typ=='snrsombreamento':
 		print 'Modelo do Sombreamento Log Normal'
 	    else:
                 if best:
@@ -925,5 +909,4 @@ class Coverage(PyLayers):
         return(fig,ax)
 
 if (__name__ == "__main__"):
-    doctest.testmod()
-
+	doctest.testmod()
